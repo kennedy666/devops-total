@@ -22,3 +22,6 @@ Thumbs.db
 
 # Virtual environment
 venv/
+
+# Excluir carpetas de backup (ajusta según sea necesario)
+Backup-datos/
