@@ -1,30 +1,33 @@
 #!/bin/bash
 
-# Directorios a limpiar
+# Variables
 DOWNLOADS_DIR="/path/to/Downloads"
 TMP_DIR="/path/to/tmp"
+LOG_FILE="/var/log/script-limpieza.log"
+MAX_DAYS=2
+MAX_SIZE=100
+THRESHOLD_SIZE=$((MAX_SIZE * 1024 * 1024)) # Convertir MB a bytes
 
-# Log file
-LOG_FILE="/path/to/Script-limpieza/clean_up.log"
-
-# Fecha y hora actuales
-CURRENT_DATE=$(date +"%Y-%m-%d %H:%M:%S")
-
-# Función para limpiar archivos
-clean_directory() {
-  local dir=$1
-  echo "Limpiando directorio: $dir" >> $LOG_FILE
-  # Eliminar archivos de más de 1 día
-  find $dir -type f -mtime +1 -exec rm -f {} \; >> $LOG_FILE 2>&1
-  # Eliminar archivos mayores a 100MB
-  find $dir -type f -size +100M -exec rm -f {} \; >> $LOG_FILE 2>&1
+# Función para enviar correos electrónicos
+send_email() {
+    local subject=$1
+    local body=$2
+    python3 /usr/local/bin/send_daily_summary.py "$subject" "$body"
 }
 
-# Limpiar los directorios
-echo "[$CURRENT_DATE] Iniciando limpieza" >> $LOG_FILE
-clean_directory $DOWNLOADS_DIR
-clean_directory $TMP_DIR
-echo "[$CURRENT_DATE] Limpieza completada" >> $LOG_FILE
+# Limpiar archivos antiguos
+find $DOWNLOADS_DIR -type f -mtime +$MAX_DAYS -exec rm -f {} \;
+find $TMP_DIR -type f -mtime +$MAX_DAYS -exec rm -f {} \;
 
-# Enviar correo con el reporte
-mail -s "Reporte de limpieza" user@example.com < $LOG_FILE
+# Limpiar archivos grandes
+find $DOWNLOADS_DIR -type f -size +${THRESHOLD_SIZE}c -exec rm -f {} \;
+find $TMP_DIR -type f -size +${THRESHOLD_SIZE}c -exec rm -f {} \;
+
+# Verificar éxito de la limpieza
+if [ $? -eq 0 ]; then
+    echo "[$(date +"%Y-%m-%d %H:%M:%S")] Limpieza completada exitosamente" >> $LOG_FILE
+    send_email "Limpieza diaria completada" "La limpieza diaria se ha completado exitosamente a las $(date +"%Y-%m-%d %H:%M:%S")."
+else
+    echo "[$(date +"%Y-%m-%d %H:%M:%S")] Error en la limpieza" >> $LOG_FILE
+    send_email "Error en la limpieza diaria" "Hubo un error durante la limpieza diaria a las $(date +"%Y-%m-%d %H:%M:%S")."
+fi

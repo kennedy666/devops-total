@@ -1,0 +1,1 @@
+# Dependencias de Python para enviar correos electrónicos

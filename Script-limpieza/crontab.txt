@@ -1,0 +1,2 @@
+# Ejecutar el script de limpieza diariamente a medianoche
+0 0 * * * /usr/local/bin/clean_up.sh >> /var/log/script-limpieza.log 2>&1
