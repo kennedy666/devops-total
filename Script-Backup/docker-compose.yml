@@ -1,0 +1,9 @@
+services:
+  backup:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - EMAIL_ADDRESS=${EMAIL_ADDRESS}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - TO_EMAIL=${TO_EMAIL}

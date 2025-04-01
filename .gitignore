@@ -1,16 +1,24 @@
-# Archivos ignorados por el sistema
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+*.cache
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+
+# Docker files
+*.tar
+*.tar.gz
+
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Archivos y carpetas de Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-
-# Archivos de Docker
-*.log
-docker-compose.override.yml
-
-# Archivos de configuración
-.env
+# Virtual environment
+venv/
