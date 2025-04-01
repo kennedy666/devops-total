@@ -1,0 +1,16 @@
+# Archivos ignorados por el sistema
+.DS_Store
+Thumbs.db
+
+# Archivos y carpetas de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Archivos de Docker
+*.log
+docker-compose.override.yml
+
+# Archivos de configuración
+.env
