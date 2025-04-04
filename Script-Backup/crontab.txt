@@ -1,0 +1,5 @@
+# Ejecuta el backup cada 20 minutos
+*/20 * * * * bash /app/backup.sh >> /app/cron.log 2>&1
+
+# Enviar resumen diario a las 20:00 hora española (18:00 UTC)
+0 18 * * * python3 /app/send_daily_summary.py >> /app/cron.log 2>&1
