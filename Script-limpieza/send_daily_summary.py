@@ -7,25 +7,22 @@ import sys
 # Cargar variables de entorno
 load_dotenv("/usr/local/bin/.env")
 
-SMTP_SERVER = os.getenv('SMTP_SERVER')
-SMTP_PORT = int(os.getenv('SMTP_PORT'))
-SMTP_USERNAME = os.getenv('SMTP_USERNAME')
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
-EMAIL_FROM = os.getenv('EMAIL_FROM')
-EMAIL_TO = os.getenv('EMAIL_TO')
+MAIL_ADDRESS = os.getenv('MAIL_ADDRESS')
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
+TO_EMAIL = os.getenv('TO_EMAIL')
 
 # Función para enviar correos electrónicos
 def send_email(subject, body):
     msg = MIMEText(body)
     msg['Subject'] = subject
-    msg['From'] = EMAIL_FROM
-    msg['To'] = EMAIL_TO
+    msg['From'] = MAIL_ADDRESS
+    msg['To'] = TO_EMAIL
 
     try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server
             server.starttls()
-            server.login(SMTP_USERNAME, SMTP_PASSWORD)
-            server.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
+            server.login(MAIL_ADDRESS, EMAIL_PASSWORD)
+            server.sendmail(MAIL_ADDRESS, TO_EMAIL, msg.as_string())
         print("Correo enviado exitosamente")
     except Exception as e:
         print(f"Error al enviar correo: {e}")

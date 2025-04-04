@@ -1,26 +1,21 @@
-# Usar una imagen base oficial de Python
-FROM python:3.9-slim
+FROM python:3.10-slim
 
-# Instalar dependencias necesarias
-RUN apt-get update && apt-get install -y cron rsyslog
+# Instalar herramientas necesarias
+RUN apt-get update && apt-get install -y cron && apt-get clean
 
-# Establecer el directorio de trabajo en el contenedor
+# Crear directorios
 WORKDIR /app
 
-# Copiar los archivos de la aplicación
-COPY . .
+# Copiar archivos
+COPY . /app/Script-Backup
 
-# Instalar dependencias de Python
-RUN pip install -r requirements.txt
+# Permisos
+RUN chmod +x /app/Script-Backup/backup.sh
 
-# Configurar cron job para respaldos cada 2 horas
-RUN echo "0 */2 * * * /app/Script-Backup/backup.sh >> /app/Script-Backup/cron.log 2>&1" > /etc/cron.d/backup-cron
+# Crear tarea en cron (cada 10 minutos)
+RUN echo "*/10 * * * * bash /app/Script-Backup/backup.sh >> /app/Script-Backup/cron.log 2>&1" > /etc/cron.d/backup-cron \
+    && chmod 0644 /etc/cron.d/backup-cron \
+    && crontab /etc/cron.d/backup-cron
 
-# Configurar cron job para enviar el resumen diario a las 23:59
-RUN echo "59 23 * * * python3 /app/Script-Backup/send_daily_summary.py >> /app/Script-Backup/cron.log 2>&1" >> /etc/cron.d/backup-cron
-
-RUN chmod 0644 /etc/cron.d/backup-cron
-RUN crontab /etc/cron.d/backup-cron
-
-# Ejecutar cron en el contenedor
+# Ejecutar cron en primer plano
 CMD ["cron", "-f"]

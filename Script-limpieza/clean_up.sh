@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Variables
-DOWNLOADS_DIR="/path/to/Downloads"
-TMP_DIR="/path/to/tmp"
+DOWNLOADS_DIR="/home/kenny/devops-total/Script-limpieza/downloads"
+TMP_DIR="/home/kenny/devops-total/Script-limpieza/tmp"
 LOG_FILE="/var/log/script-limpieza.log"
 MAX_DAYS=2
 MAX_SIZE=100
@@ -26,8 +26,8 @@ find $TMP_DIR -type f -size +${THRESHOLD_SIZE}c -exec rm -f {} \;
 # Verificar éxito de la limpieza
 if [ $? -eq 0 ]; then
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] Limpieza completada exitosamente" >> $LOG_FILE
-    send_email "Limpieza diaria completada" "La limpieza diaria se ha completado exitosamente a las $(date +"%Y-%m-%d %H:%M:%S")."
+    send_email "Limpieza diaria completada" "La limpieza diaria se ha completado exitosamente."
 else
     echo "[$(date +"%Y-%m-%d %H:%M:%S")] Error en la limpieza" >> $LOG_FILE
-    send_email "Error en la limpieza diaria" "Hubo un error durante la limpieza diaria a las $(date +"%Y-%m-%d %H:%M:%S")."
+    send_email "Error en la limpieza diaria" "Hubo un error durante la limpieza diaria."
 fi

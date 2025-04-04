@@ -2,28 +2,18 @@ services:
   script-backup:
     build:
       context: ./Script-Backup
-      dockerfile: Dockerfile
     container_name: script-backup
     volumes:
-      - /path/to/Backup:/path/to/Backup
-      - /path/to/Backup/logs:/var/log/script-backup
-    environment:
-      - TZ=Europe/Madrid
-      - ENV_FILE=.env
-    env_file:
-      - .env
+      - ./Script-Backup:/app
+      - ./.env:/app/.env
     restart: unless-stopped
 
   script-limpieza:
     build:
       context: ./Script-limpieza
-      dockerfile: Dockerfile
     container_name: script-limpieza
     volumes:
-      - /path/to/Downloads:/path/to/Downloads
-      - /path/to/tmp:/path/to/tmp
-      - /var/log/script-limpieza.log:/var/log/script-limpieza.log:rw
-      - ./devops-total/.env:/usr/local/bin/.env:ro
-    environment:
-      - TZ=Europe/Madrid
+      - ./Script-limpieza:/usr/local/bin
+      - ./.env:/usr/local/bin/.env
+      - /var/log/script-limpieza.log:/var/log/script-limpieza.log
     restart: unless-stopped
