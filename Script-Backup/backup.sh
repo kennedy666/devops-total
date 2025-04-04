@@ -1,35 +1,41 @@
 #!/bin/bash
 
-# === Variables ===
-SOURCE_DIR="/app/Script-Backup/Datos"
-BACKUP_DIR="/app/Script-Backup/Backup-datos"
-LOG_FILE="/app/Script-Backup/backup.log"
+# Variables
+SOURCE_DIR="/app/Datos"
+BACKUP_DIR="/app/Backup-datos"
+LOG_FILE="/app/backup.log"
 MAX_BACKUPS=5
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
-BACKUP_NAME="Backup-$TIMESTAMP.tar.gz"
-ENV_FILE="/app/Script-Backup/.env"
 
-# === Crear directorio si no existe ===
+# Crear carpeta de backup si no existe
 mkdir -p "$BACKUP_DIR"
 
-# === Crear backup ===
-tar -czf "$BACKUP_DIR/$BACKUP_NAME" -C "$SOURCE_DIR" .
-STATUS=$?
+# Crear backup
+BACKUP_NAME="Backup-$TIMESTAMP"
+{
+    echo "📦 Backup iniciado: $TIMESTAMP"
+    echo "📂 Origen: $SOURCE_DIR"
+    echo "📁 Destino: $BACKUP_DIR/$BACKUP_NAME.tar.gz"
+    
+    tar -czf "$BACKUP_DIR/$BACKUP_NAME.tar.gz" -C "$SOURCE_DIR" .
+    
+    echo "✅ Backup creado correctamente."
+    echo "--------------------------------------"
+    
+    # Limpiar backups antiguos
+    TOTAL=$(ls -1t "$BACKUP_DIR"/Backup-*.tar.gz 2>/dev/null | wc -l)
+    if [ "$TOTAL" -gt "$MAX_BACKUPS" ]; then
+        ELIMINAR=$(ls -1t "$BACKUP_DIR"/Backup-*.tar.gz | tail -n +$((MAX_BACKUPS+1)))
+        for archivo in $ELIMINAR; do
+            rm "$archivo"
+            echo "🧹 Versión antigua eliminada (límite $MAX_BACKUPS): $archivo"
+        done
+    fi
+} >> "$LOG_FILE" 2>&1
 
-# === Guardar log ===
-if [ $STATUS -eq 0 ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✅ Backup creado: $BACKUP_NAME" >> "$LOG_FILE"
-else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ❌ Error en el backup: $BACKUP_NAME" >> "$LOG_FILE"
-    python3 /app/Script-Backup/send_error_email.py "Error en el backup" "El backup ha fallado en $TIMESTAMP"
-fi
-
-# === Mantener solo los últimos 5 backups ===
-BACKUP_COUNT=$(ls -1t "$BACKUP_DIR"/*.tar.gz 2>/dev/null | wc -l)
-if [ "$BACKUP_COUNT" -gt "$MAX_BACKUPS" ]; then
-    OLDEST=$(ls -1t "$BACKUP_DIR"/*.tar.gz | tail -n +$((MAX_BACKUPS + 1)))
-    for file in $OLDEST; do
-        rm -f "$file"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] 🗑️ Backup eliminado: $(basename "$file")" >> "$LOG_FILE"
-    done
+# Verificar si el backup tuvo éxito
+if [ $? -ne 0 ]; then
+    ERROR_MSG=$(tail -n 1 "$LOG_FILE")
+    FULL_PATH="$(realpath $0)"
+    python3 /app/send_error_email.py "ERROR EN EL BACKUP DIARIO" "El backup falló con el error: $ERROR_MSG\nRuta del script: $FULL_PATH"
 fi

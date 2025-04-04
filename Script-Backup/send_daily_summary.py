@@ -1,37 +1,26 @@
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import os
+import smtplib
+from email.message import EmailMessage
+import sys
 
-def send_email(subject, body, to_email):
-    from_email = os.getenv('EMAIL_ADDRESS')
-    password = os.getenv('EMAIL_PASSWORD')
+from_email = os.getenv('MAIL_ADDRESS')
+password = os.getenv('EMAIL_PASSWORD')
+to_email = os.getenv('TO_EMAIL')
 
-    # Crear el objeto del mensaje
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
+msg = EmailMessage()
+msg['Subject'] = sys.argv[1]
+msg['From'] = from_email
+msg['To'] = to_email
 
-    # Adjuntar el cuerpo del mensaje
-    msg.attach(MIMEText(body, 'plain'))
+# Leer resumen diario
+with open(sys.argv[2], 'r') as f:
+    body = f.read()
+msg.set_content(body)
 
-    # Configurar el servidor SMTP
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.starttls()
-    server.login(from_email, password)
-
-    # Enviar el correo electrónico
-    text = msg.as_string()
-    server.sendmail(from_email, to_email, text)
-    server.quit()
-
-if __name__ == '__main__':
-    subject = 'Daily Backup Log Summary'
-    to_email = os.getenv('TO_EMAIL')
-
-    # Leer el contenido del archivo de logs
-    with open('/app/Script-Backup/backup.log', 'r') as log_file:
-        body = log_file.read()
-
-    send_email(subject, body, to_email)
+try:
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls()
+        server.login(from_email, password)
+        server.send_message(msg)
+except Exception as e:
+    print(f"Error al enviar el resumen diario: {e}")

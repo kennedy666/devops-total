@@ -1,0 +1,3 @@
+📌 Este es el resumen de los backups del día de hoy, todo correcto.
+Fecha: 2025-04-04_10-00
+Backup: Backup-2025-04-04_10-00.tar.gz
