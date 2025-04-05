@@ -1,33 +1,66 @@
 #!/bin/bash
 
 # Variables
-DOWNLOADS_DIR="/home/kenny/devops-total/Script-limpieza/downloads"
-TMP_DIR="/home/kenny/devops-total/Script-limpieza/tmp"
-LOG_FILE="/var/log/script-limpieza.log"
+DOWNLOADS_DIR="/usr/local/bin/downloads"
+TMP_DIR="/usr/local/bin/tmp"
+LOG_FILE="/usr/local/bin/limpieza.log"
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M")
 MAX_DAYS=2
-MAX_SIZE=100
-THRESHOLD_SIZE=$((MAX_SIZE * 1024 * 1024)) # Convertir MB a bytes
+MAX_SIZE_MB=100
+THRESHOLD_SIZE=$((MAX_SIZE_MB * 1024 * 1024)) # Convertir a bytes
 
-# Función para enviar correos electrónicos
-send_email() {
-    local subject=$1
-    local body=$2
-    python3 /usr/local/bin/send_daily_summary.py "$subject" "$body"
+CHANGES=""
+
+# Encabezado del log
+{
+echo "--------------------------------------"
+echo "🧹 Limpieza iniciada: $TIMESTAMP"
+echo "📂 Directorios objetivo:"
+echo "   - $DOWNLOADS_DIR"
+echo "   - $TMP_DIR"
+echo "📁 Criterios:"
+echo "   - Archivos de más de $MAX_DAYS días"
+echo "   - Archivos mayores a $MAX_SIZE_MB MB"
+} >> "$LOG_FILE"
+
+# Función para registrar eliminaciones
+log_deleted() {
+    local tipo=$1
+    local archivo=$2
+    CHANGES+="$tipo eliminado: ${archivo/#\/usr\/local\/bin\//}\n"
 }
 
-# Limpiar archivos antiguos
-find $DOWNLOADS_DIR -type f -mtime +$MAX_DAYS -exec rm -f {} \;
-find $TMP_DIR -type f -mtime +$MAX_DAYS -exec rm -f {} \;
+# Buscar y eliminar archivos antiguos
+for DIR in "$DOWNLOADS_DIR" "$TMP_DIR"; do
+    while IFS= read -r archivo; do
+        rm -f "$archivo"
+        log_deleted "Archivo" "$archivo"
+    done < <(find "$DIR" -type f -mtime +$MAX_DAYS)
+done
 
-# Limpiar archivos grandes
-find $DOWNLOADS_DIR -type f -size +${THRESHOLD_SIZE}c -exec rm -f {} \;
-find $TMP_DIR -type f -size +${THRESHOLD_SIZE}c -exec rm -f {} \;
+# Buscar y eliminar archivos grandes
+for DIR in "$DOWNLOADS_DIR" "$TMP_DIR"; do
+    while IFS= read -r archivo; do
+        rm -f "$archivo"
+        log_deleted "Archivo" "$archivo"
+    done < <(find "$DIR" -type f -size +${THRESHOLD_SIZE}c)
+done
 
-# Verificar éxito de la limpieza
+# Resultado
 if [ $? -eq 0 ]; then
-    echo "[$(date +"%Y-%m-%d %H:%M:%S")] Limpieza completada exitosamente" >> $LOG_FILE
-    send_email "Limpieza diaria completada" "La limpieza diaria se ha completado exitosamente."
+    echo "✅ Limpieza completada correctamente." >> "$LOG_FILE"
 else
-    echo "[$(date +"%Y-%m-%d %H:%M:%S")] Error en la limpieza" >> $LOG_FILE
-    send_email "Error en la limpieza diaria" "Hubo un error durante la limpieza diaria."
+    echo "❌ Error durante la limpieza" >> "$LOG_FILE"
 fi
+
+# Si hubo cambios, los mostramos
+if [ -n "$CHANGES" ]; then
+    {
+        echo ""
+        echo "🕒 $TIMESTAMP - Cambios detectados:"
+        echo -e "🗑️ $CHANGES"
+    } >> "$LOG_FILE"
+fi
+
+# Enviar correo con resumen del log
+python3 /usr/local/bin/send_daily_summary.py "Resumen diario de limpieza" "$LOG_FILE"

@@ -1,0 +1,6 @@
+/
+Fotos/
+archivo1.txtf
+archivo2.txtf
+archivo3.txtf
+prueba/

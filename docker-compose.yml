@@ -5,8 +5,7 @@ services:
     container_name: script-backup
     volumes:
       - ./Script-Backup:/app
-    env_file:
-      - .env
+    env_file: .env
     restart: unless-stopped
 
   script-limpieza:
@@ -14,8 +13,26 @@ services:
       context: ./Script-limpieza
     container_name: script-limpieza
     volumes:
-      - ./Script-limpieza:/usr/local/bin
-      - /var/log/script-limpieza.log:/var/log/script-limpieza.log
-    env_file:
-      - .env
+      - ./Script-limpieza/downloads:/usr/local/bin/downloads
+      - ./Script-limpieza/tmp:/usr/local/bin/tmp
+      - ./Script-limpieza/limpieza.log:/usr/local/bin/limpieza.log
+    env_file: .env
+    restart: unless-stopped
+
+  estado:
+    build:
+      context: ./Script-estado
+    container_name: estado
+    volumes:
+      - ./Script-estado/estado.log:/usr/local/bin/estado.log
+    env_file: .env
+    restart: unless-stopped
+
+  servicios:
+    build:
+      context: ./Script-servicios
+    container_name: servicios
+    volumes:
+      - ./Script-servicios/logs:/usr/local/bin/logs
+    env_file: .env
     restart: unless-stopped
